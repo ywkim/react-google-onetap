@@ -5,5 +5,12 @@
   "main": "index.js",
   "repository": "git@github.com:ywkim/react-google-onetap.git",
   "author": "Youngwook Kim",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.1"
+  }
 }
