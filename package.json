@@ -1,0 +1,9 @@
+{
+  "name": "react-google-onetap",
+  "version": "0.0.1",
+  "description": "Google one-tap sign-up component for React",
+  "main": "index.js",
+  "repository": "git@github.com:ywkim/react-google-onetap.git",
+  "author": "Youngwook Kim",
+  "license": "MIT"
+}
