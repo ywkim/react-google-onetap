@@ -2,15 +2,37 @@
   "name": "react-google-onetap",
   "version": "0.0.1",
   "description": "Google one-tap sign-up component for React",
-  "main": "index.js",
+  "main": "lib/index.js",
   "repository": "git@github.com:ywkim/react-google-onetap.git",
   "author": "Youngwook Kim",
   "license": "MIT",
+  "scripts": {
+    "build:lib": "cross-env NODE_ENV=production babel src --out-dir lib --ignore macros,tx,spec.js"
+  },
+  "babel": {
+    "plugins": [
+      "transform-class-properties",
+      "transform-object-rest-spread",
+      "transform-runtime"
+    ],
+    "presets": [
+      "react"
+    ]
+  },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-react": "^6.24.1",
+    "cross-env": "^5.1.4",
+    "prettier": "^1.12.1",
     "react": "^16.3.2",
     "react-dom": "^16.3.2"
   },
   "dependencies": {
-    "prop-types": "^15.6.1"
+    "prop-types": "^15.6.1",
+    "recompose": "^0.27.0",
+    "scriptjs": "^2.5.8"
   }
 }
