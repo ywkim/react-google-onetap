@@ -1,35 +1,29 @@
 /* global google */
-import _ from "lodash"
-import warning from "warning"
-import invariant from "invariant"
-import { getDisplayName } from "recompose"
-import PropTypes from "prop-types"
-import React from "react"
+import _ from 'lodash';
+import warning from 'warning';
+import invariant from 'invariant';
+import { getDisplayName } from 'recompose';
+import PropTypes from 'prop-types';
+import React from 'react';
 
-import { CREDENTIAL } from "./constants"
+import { CredentialContext } from './credential-context';
 
 export function withCredential(BaseComponent) {
-  const factory = React.createFactory(BaseComponent)
+  const factory = React.createFactory(BaseComponent);
 
   class Container extends React.PureComponent {
-    static displayName = `withCredential(${getDisplayName(BaseComponent)})`
-
-    static contextTypes = {
-      [CREDENTIAL]: PropTypes.object,
-    }
+    static displayName = `withCredential(${getDisplayName(BaseComponent)})`;
 
     render() {
-      const credential = this.context[CREDENTIAL];
-
-      if (credential) {
-        return factory({credential})
-      } else {
-        return factory({})
-      }
+      return (
+        <CredentialContext.Consumer>
+          {credential => factory({ credential })}
+        </CredentialContext.Consumer>
+      );
     }
   }
 
-  return Container
+  return Container;
 }
 
-export default withCredential
+export default withCredential;

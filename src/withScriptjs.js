@@ -4,7 +4,7 @@ import { getDisplayName } from 'recompose';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import { CREDENTIAL } from './constants';
+import { CredentialContext } from './credential-context';
 
 const GOOGLEYOLO_SRC = 'https://smartlock.google.com/client';
 
@@ -26,10 +26,6 @@ export function withScriptjs(BaseComponent) {
       onRetrieveSuccess: PropTypes.func,
       onHintSuccess: PropTypes.func,
       onHintError: PropTypes.func,
-    };
-
-    static childContextTypes = {
-      [CREDENTIAL]: PropTypes.object,
     };
 
     static defaultProps = {
@@ -102,12 +98,6 @@ export function withScriptjs(BaseComponent) {
         );
     };
 
-    getChildContext() {
-      return {
-        [CREDENTIAL]: this.state.credential,
-      };
-    }
-
     componentWillMount() {
       const { loadingElement } = this.props;
       invariant(
@@ -137,12 +127,25 @@ export function withScriptjs(BaseComponent) {
     }
 
     render() {
-      const { loadingElement, ...restProps } = this.props;
+      const {
+        loadingElement,
+        supportedAuthMethods,
+        supportedIdTokenProviders,
+        signIn,
+        onRetrieveSuccess,
+        onHintSuccess,
+        onHintError,
+        ...restProps
+      } = this.props;
 
       const { loadingState } = this.state;
 
       if (loadingState === LOADING_STATE_LOADED) {
-        return factory(restProps);
+        return (
+          <CredentialContext.Provider value={this.state.credential}>
+            {factory(restProps)}
+          </CredentialContext.Provider>
+        );
       } else {
         return loadingElement;
       }
