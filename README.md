@@ -11,8 +11,8 @@ yarn add react-google-onetap
 ## How to use
 
 There're some steps to take to create your custom map components.
-1. In order to initialize the `MyComponent` with DOM instances, you'll need to wrap it with [`withCredential`] HOC.
-1. In order to correctly load [`googleyolo` JavaScript client library][gyjscl], you'll need to wrap it with [`withScriptjs`] HOC.
+1. In order to initialize the `MyComponent` with the credential, you'll need to wrap it with [`withCredential`] HOC.
+1. In order to correctly load [`googleyolo` JavaScript client library][gyjscl], you'll need to wrap it with [`withScriptjs`].
 1. Notice there're some required props for withCredential and withScriptjs HOC.
 
 ```js static

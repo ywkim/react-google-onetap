@@ -6,6 +6,8 @@ import React from 'react';
 
 import { CREDENTIAL } from './constants';
 
+const GOOGLEYOLO_SRC = 'https://smartlock.google.com/client';
+
 const LOADING_STATE_NONE = `NONE`;
 const LOADING_STATE_BEGIN = `BEGIN`;
 const LOADING_STATE_LOADED = `LOADED`;
@@ -18,12 +20,23 @@ export function withScriptjs(BaseComponent) {
 
     static propTypes = {
       loadingElement: PropTypes.node.isRequired,
-      supportedAuthMethods: PropTypes.object,
-      supportedIdTokenProviders: PropTypes.object,
+      supportedAuthMethods: PropTypes.arrayOf(PropTypes.string),
+      supportedIdTokenProviders: PropTypes.arrayOf(PropTypes.object),
+      signIn: PropTypes.bool,
+      onRetrieveSuccess: PropTypes.func,
+      onHintSuccess: PropTypes.func,
+      onHintError: PropTypes.func,
     };
 
     static childContextTypes = {
       [CREDENTIAL]: PropTypes.object,
+    };
+
+    static defaultProps = {
+      supportedAuthMethods: [
+        'https://accounts.google.com',
+        'googleyolo://id-and-password',
+      ],
     };
 
     state = {
@@ -33,94 +46,61 @@ export function withScriptjs(BaseComponent) {
 
     isUnmounted = false;
 
-    handleGoogleYoloLoad = googleyolo => {
-      const retrievePromise = googleyolo.retrieve({
-        supportedAuthMethods: this.props.supportedAuthMethods,
-        supportedIdTokenProviders: this.props.supportedIdTokenProviders,
-      });
-
-      retrievePromise.then(
-        credential => {
-          if (credential.password) {
-            // An ID (usually email address) and password credential was retrieved.
-            // Sign in to your backend using the password.
-            signInWithEmailAndPassword(credential.id, credential.password);
-          } else {
-            // A Google Account is retrieved. Since Google supports ID token responses,
-            // you can use the token to sign in instead of initiating the Google sign-in
-            // flow.
-            useGoogleIdTokenForAuth(credential.idToken);
-            this.setState({ credential });
-          }
-        },
-        error => {
-          // Credentials could not be retrieved. In general, if the user does not
-          // need to be signed in to use the page, you can just fail silently; or,
-          // you can also examine the error object to handle specific error cases.
-
-          // If retrieval failed because there were no credentials available, and
-          // signing in might be useful or is required to proceed from this page,
-          // you can call `hint()` to prompt the user to select an account to sign
-          // in or sign up with.
-          if (error.type === 'noCredentialsAvailable') {
-            const hintPromise = googleyolo.hint({
-              supportedAuthMethods: this.props.supportedAuthMethods,
-              supportedIdTokenProviders: this.props.supportedIdTokenProviders,
-            });
-            hintPromise.then(
-              credential => {
-                if (credential.idToken) {
-                  // Send the token to your auth backend.
-                  useGoogleIdTokenForAuth(credential.idToken);
-                  this.setState({ credential });
-                }
-              },
-              error => {
-                switch (error.type) {
-                  case 'userCanceled':
-                    // The user closed the hint selector. Depending on the desired UX,
-                    // request manual sign up or do nothing.
-                    break;
-                  case 'noCredentialsAvailable':
-                    // No hint available for the session. Depending on the desired UX,
-                    // request manual sign up or do nothing.
-                    break;
-                  case 'requestFailed':
-                    // The request failed, most likely because of a timeout.
-                    // You can retry another time if necessary.
-                    break;
-                  case 'operationCanceled':
-                    // The operation was programmatically canceled, do nothing.
-                    break;
-                  case 'illegalConcurrentRequest':
-                    // Another operation is pending, this one was aborted.
-                    break;
-                  case 'initializationError':
-                    // Failed to initialize. Refer to error.message for debugging.
-                    break;
-                  case 'configurationError':
-                    // Configuration error. Refer to error.message for debugging.
-                    break;
-                  default:
-                  // Unknown error, do nothing.
-                }
-              }
-            );
-          }
-        }
-      );
-    };
-
-    handleLoaded = _.bind(this.handleLoaded, this);
-
-    handleLoaded() {
+    handleLoaded = () => {
       if (this.isUnmounted) {
         return;
       }
       this.setState({
         loadingState: LOADING_STATE_LOADED,
       });
-    }
+    };
+
+    onGoogleYoloLoad = googleyolo => {
+      const {
+        supportedAuthMethods,
+        supportedIdTokenProviders,
+        signIn,
+        onRetrieveSuccess,
+        onHintSuccess,
+        onHintError,
+      } = this.props;
+      return googleyolo
+        .retrieve({
+          supportedAuthMethods,
+          supportedIdTokenProviders,
+        })
+        .then(
+          credential => {
+            onRetrieveSuccess && onRetrieveSuccess(credential);
+            this.setState({ credential });
+          },
+          error => {
+            // Credentials could not be retrieved. In general, if the user does not
+            // need to be signed in to use the page, you can just fail silently; or,
+            // you can also examine the error object to handle specific error cases.
+
+            // If retrieval failed because there were no credentials available, and
+            // signing in might be useful or is required to proceed from this page,
+            // you can call `hint()` to prompt the user to select an account to sign
+            // in or sign up with.
+            if (error.type === 'noCredentialsAvailable' && signIn) {
+              const hintPromise = googleyolo.hint({
+                supportedAuthMethods,
+                supportedIdTokenProviders,
+              });
+              hintPromise.then(
+                credential => {
+                  onHintSuccess && onHintSuccess(credential);
+                  this.setState({ credential });
+                },
+                error => {
+                  onHintError && onHintError(error);
+                }
+              );
+            }
+          }
+        );
+    };
 
     getChildContext() {
       return {
@@ -144,11 +124,11 @@ export function withScriptjs(BaseComponent) {
       this.setState({
         loadingState: LOADING_STATE_BEGIN,
       });
-      window.onGoogleYoloLoad = this.handleGoogleYoloLoad;
+      window.onGoogleYoloLoad = this.onGoogleYoloLoad;
       // Don't load scriptjs as a dependency since we do not want this module be used on server side.
       // eslint-disable-next-line global-require
       const scriptjs = require(`scriptjs`);
-      const googleYoloURL = 'https://smartlock.google.com/client';
+      const googleYoloURL = GOOGLEYOLO_SRC;
       scriptjs(googleYoloURL, this.handleLoaded);
     }
 
