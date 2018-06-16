@@ -17,7 +17,7 @@ export function withCredential(BaseComponent) {
     render() {
       return (
         <CredentialContext.Consumer>
-          {credential => factory({ credential })}
+          {credential => factory({ ...this.props, credential })}
         </CredentialContext.Consumer>
       );
     }
